@@ -33,7 +33,7 @@ function checkForJitoBundle() {
       (response) => {
         if (response && response.success) {
           // Display the notification based on the API response
-          showNotification(response.isBundle);
+          showNotification(response);
           //console.log(`Transaction ${txSignature} is ${response.isBundle ? 'a' : 'not a'} Jito bundle`);
         } else {
           // Handle error
@@ -66,8 +66,9 @@ function removeHoverNotification() {
   }
 }
 
-function showNotification(isJitoBundle) {
+function showNotification(response) {
   // Remove any existing notifications first
+  isJitoBundle = response.isBundle;  
   removeNotification();
 
   // Create a new notification element
@@ -86,7 +87,16 @@ function showNotification(isJitoBundle) {
   if (isJitoBundle) {
     notification.style.backgroundColor = '#4CAF50';
     notification.style.color = 'white';
-    notification.textContent = '✓ tx is Jito bundle';
+    textContent = '✓ tx is Jito bundle (tip: ' + response.validatorTip + ')';
+    const adLink = document.createElement('a');
+    url = response.bundleUrl;
+    adLink.textContent = textContent;
+    adLink.href = url;
+    adLink.target = '_blank';
+    adLink.style.color = 'white';
+    adLink.style.textDecoration = 'underline';
+    adLink.style.fontWeight = 'bold';
+    notification.appendChild(adLink);
   } else {
     notification.style.backgroundColor = '#f44336';
     notification.style.color = 'white';
