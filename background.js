@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const bundleUrl = `https://explorer.jito.wtf/bundle/${bundleId}`;
           
           // Create a tab to load the bundle explorer page
-          console.log('creating tab...')
+          //console.log('creating tab...')
           chrome.tabs.create({ url: bundleUrl, active: false }, (tab) => {
             // Listen for when the page is fully loaded
             chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
@@ -47,7 +47,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                       success: true,
                       isBundle,
                       bundleUrl,
-                      validatorTip
+                      validatorTip,
+                      bundleId
                     });
                   });
                 }, 3000); // Additional wait time after page load completes

@@ -36,9 +36,9 @@ function checkForJitoBundle() {
       },
       (response) => {
         if (response && response.success) {
-          // Display the notification based on the API response
-          //createNewBlock('Jito Bundle', 'Validate Tip: ', 'https://www.google.com');
+          // Display the notification based on the API response          
           showNotification(response);
+          insertCustomDiv(response.bundleUrl, response.bundleId + ` (${response.validatorTip}) `);
           //console.log(`Transaction ${txSignature} is ${response.isBundle ? 'a' : 'not a'} Jito bundle`);
         } else {
           // Handle error
@@ -47,7 +47,7 @@ function checkForJitoBundle() {
         }
       }
     );
-  }, 10); // Wait 1.5 seconds for page content to load
+  }, 1500); // Wait 1.5 seconds for page content to load
 }
 
 function removeNotification() {
@@ -383,3 +383,60 @@ window.addEventListener('popstate', () => {
     removeNotification();
   }
 });
+
+
+function insertCustomDiv(para_link, para_text) {
+  // 先找到所有符合基本属性的 div
+  const divs = document.querySelectorAll("div");
+
+  const signerDiv = Array.from(divs).find(div => div.innerText.trim() === "Signer");
+  if (!signerDiv) {
+    console.warn("未找到包含 'Signer' 的 div");
+    return;
+  }
+
+  // 创建新的 div 元素
+  const newDiv = document.createElement("div");
+  newDiv.innerHTML = `
+      <div class="flex flex-row flex-wrap justify-start grow-0 shrink-0 basis-full min-w-0 box-border -mx-4 sm:-mx-3 items-stretch gap-y-0">
+          <div class="max-w-24/24 md:max-w-6/24 flex-24/24 md:flex-6/24 block relative box-border my-0 px-4 sm:px-3">
+              <div class="flex gap-1 flex-row items-center justify-start flex-wrap">
+                  <div class="" data-state="closed">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-help text-neutral8 md:text-neutral5 font-medium md:font-normal">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <path d="M12 17h.01"></path>
+                      </svg>
+                  </div>
+                  <div class="not-italic text-[14px] leading-[24px] text-neutral8 md:text-neutral5 font-medium md:font-normal">Jito Bundle</div>
+              </div>
+          </div>
+          <div class="max-w-24/24 md:max-w-18/24 flex-24/24 md:flex-18/24 block relative box-border my-0 px-4 sm:px-3">
+              <div class="flex flex-col gap-2 items-stretch justify-start w-full">
+                  <div>
+                      <span class="w-auto max-w-full whitespace-nowrap">
+                          <div class="inline" data-state="closed">
+                              <span class="align-middle font-normal text-[14px] leading-[24px] border border-dashed border-transparent box-content break-all px-1 -mx-1 rounded-md textLink autoTruncate">
+                                  <a class="text-current" href="${para_link}">${para_text}</a>
+                              </span>
+                          </div>
+                          <span class="inline-flex items-center ml-1 gap-2 align-middle">
+                              <div class="inline-flex align-middle" data-state="closed">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy cursor-pointer text-[#adb5bd] hover:text-link-500">
+                                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                                  </svg>
+                              </div>
+                          </span>
+                      </span>
+                  </div>
+              </div>
+          </div>
+      </div>
+  `;
+
+  // 插入新元素
+  const outerDiv = signerDiv.closest("div").parentNode; // 获取最外层的 <div>
+  outerDiv.insertAdjacentElement("afterend", newDiv);
+  
+}
