@@ -1,4 +1,5 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  //console.log('fetching jito bundle...')
   if (request.type === 'fetchJitoBundle') {
     const apiUrl = `https://bundles.jito.wtf/api/v1/bundles/transaction/${request.signature}`;
     fetch(apiUrl)
@@ -12,6 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const bundleUrl = `https://explorer.jito.wtf/bundle/${bundleId}`;
           
           // Create a tab to load the bundle explorer page
+          console.log('creating tab...')
           chrome.tabs.create({ url: bundleUrl, active: false }, (tab) => {
             // Listen for when the page is fully loaded
             chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
@@ -67,14 +69,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Listen for navigation events
+/*
 chrome.webNavigation.onHistoryStateUpdated.addListener(
   function(details) {
     if (details.url.includes("solscan.io/tx/")) {
-      //console.log('debug bg send checkJitoBundle for navigation')
+      console.log('debug bg send checkJitoBundle for navigation')
       //chrome.tabs.sendMessage(details.tabId, { action: "checkJitoBundle" });
       chrome.tabs.sendMessage(details.tabId, { action: "checkJitoBundle" })
       .catch((error) => {
-        //console.error("sendMessage failed:", error);
+        console.error("sendMessage failed:", error);
         // 等待 1 秒后重试
         setTimeout(() => {
           chrome.tabs.sendMessage(details.tabId, { action: "checkJitoBundle" })
@@ -86,6 +89,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
   },
   { url: [{ hostSuffix: "solscan.io" }] }
 );
+
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -104,3 +108,4 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   
   }
 });
+*/

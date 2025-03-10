@@ -1,16 +1,19 @@
 // content.js
 let notificationTimeout = null;
 let hoverNotification = null;
+let txStartsWith = 'https://solscan.io/tx/';
 
 // 正则表达式用于匹配Solana交易签名
 const solanaSignatureRegex = /[1-9A-HJ-NP-Za-km-z]{32,88}/;
 
 function checkForJitoBundle() {
+  //console.log('Checking for Jito bundle...');
   // Clear any existing timeout to prevent multiple checks
   clearTimeout(notificationTimeout);
   
   // Only proceed if we're on a transaction page
-  if (!window.location.pathname.startsWith('/tx/')) {
+  if (!window.location.href.startsWith(txStartsWith)) {
+    //console.log('Not on a transaction page: ' + window.location.pathname);
     removeNotification();
     return;
   }
@@ -20,10 +23,11 @@ function checkForJitoBundle() {
     // Get the transaction signature from the URL
     const txSignature = window.location.pathname.split('/tx/')[1];
     if (!txSignature) {
+      //console.log('can not get txs');
       removeNotification();
       return;
     }
-
+    //console.log('sending ' + txSignature)
     // Call the background script to fetch data from the Jito API
     chrome.runtime.sendMessage(
       { 
@@ -33,16 +37,17 @@ function checkForJitoBundle() {
       (response) => {
         if (response && response.success) {
           // Display the notification based on the API response
+          //createNewBlock('Jito Bundle', 'Validate Tip: ', 'https://www.google.com');
           showNotification(response);
           //console.log(`Transaction ${txSignature} is ${response.isBundle ? 'a' : 'not a'} Jito bundle`);
         } else {
           // Handle error
-          //console.error('Error checking Jito bundle:', response ? response.error : 'No response');
+          console.error('Error checking Jito bundle:', response ? response.error : 'No response');
           showErrorNotification();
         }
       }
     );
-  }, 1500); // Wait 1.5 seconds for page content to load
+  }, 10); // Wait 1.5 seconds for page content to load
 }
 
 function removeNotification() {
@@ -126,7 +131,8 @@ function showNotification(response) {
   }, 10000);
 }
 
-function showHoverNotification(isJitoBundle, x, y) {
+function showHoverNotification(response, x, y) {
+  isJitoBundle = response.isBundle;
   // Remove any existing hover notification
   removeHoverNotification();
 
@@ -148,7 +154,16 @@ function showHoverNotification(isJitoBundle, x, y) {
   if (isJitoBundle) {
     notification.style.backgroundColor = '#4CAF50';
     notification.style.color = 'white';
-    notification.textContent = '✓ Jito bundle';
+    textContent = '✓ Jito bundle (tip: ' + response.validatorTip + ')';
+    const adLink = document.createElement('a');
+    url = response.bundleUrl;
+    adLink.textContent = textContent;
+    adLink.href = url;
+    adLink.target = '_blank';
+    adLink.style.color = 'white';
+    adLink.style.textDecoration = 'underline';
+    adLink.style.fontWeight = 'bold';
+    notification.appendChild(adLink);
   } else {
     notification.style.backgroundColor = '#f44336';
     notification.style.color = 'white';
@@ -302,7 +317,7 @@ function handleLinkHover(event) {
         if (currentHoverSignature !== signature) return;
         
         if (response && response.success) {
-          showHoverNotification(response.isBundle, x, y);
+          showHoverNotification(response, x, y);
         }
       }
     );
@@ -318,18 +333,19 @@ function handleLinkLeave() {
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "checkJitoBundle") {
-    //console.log('got message and call checkForJitoBundle')
+    console.log('got message and call checkForJitoBundle')
     checkForJitoBundle();
   }
 });
 
+
 // Helper function to check if current page is a transaction page
 function isTransactionPage() {
-  return window.location.pathname.startsWith('/tx/');
+  return window.location.href.startsWith(txStartsWith);
 }
 
 // 设置页面加载和导航的处理
-function setupPageHandlers() {
+function setupPageHandlers() {    
   // 添加鼠标悬停事件监听器
   document.addEventListener('mouseover', handleLinkHover);
   document.addEventListener('mouseout', handleLinkLeave);
