@@ -2,6 +2,7 @@
 let notificationTimeout = null;
 let hoverNotification = null;
 let txStartsWith = 'https://solscan.io/tx/';
+let global_response = null;
 
 // 正则表达式用于匹配Solana交易签名
 const solanaSignatureRegex = /[1-9A-HJ-NP-Za-km-z]{32,88}/;
@@ -37,8 +38,8 @@ function checkForJitoBundle() {
       (response) => {
         if (response && response.success) {
           // Display the notification based on the API response          
-          showNotification(response);
-          insertCustomDiv(response.bundleUrl, response.bundleId + ` (${response.validatorTip}) `);
+          global_response = response;
+          showNotification(response); 
           //console.log(`Transaction ${txSignature} is ${response.isBundle ? 'a' : 'not a'} Jito bundle`);
         } else {
           // Handle error
@@ -358,6 +359,173 @@ function setupPageHandlers() {
   }
 }
 
+function insertCustomDiv(para_link, para_text) {
+  // 先找到所有符合基本属性的 div
+  const divs = document.querySelectorAll("div");
+
+  const signerDiv = Array.from(divs).find(div => div.innerText.trim() === "Signer");
+  if (!signerDiv) {
+    console.log("未找到包含 'Signer' 的 div");
+    return false;
+  }
+
+  // 创建新的 div 元素
+  const newDiv = document.createElement("div");
+  newDiv.innerHTML = `
+      <div class="flex flex-row flex-wrap justify-start grow-0 shrink-0 basis-full min-w-0 box-border -mx-4 sm:-mx-3 items-stretch gap-y-0">
+          <div class="max-w-24/24 md:max-w-6/24 flex-24/24 md:flex-6/24 block relative box-border my-0 px-4 sm:px-3">
+              <div class="flex gap-1 flex-row items-center justify-start flex-wrap">
+                  <div class="" data-state="closed">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-help text-neutral8 md:text-neutral5 font-medium md:font-normal">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <path d="M12 17h.01"></path>
+                      </svg>
+                  </div>
+                  <div class="not-italic text-[14px] leading-[24px] text-neutral8 md:text-neutral5 font-medium md:font-normal">Jito Bundle</div>
+              </div>
+          </div>
+          <div class="max-w-24/24 md:max-w-18/24 flex-24/24 md:flex-18/24 block relative box-border my-0 px-4 sm:px-3">
+              <div class="flex flex-col gap-2 items-stretch justify-start w-full">
+                  <div>
+                      <span class="w-auto max-w-full whitespace-nowrap">
+                          <div class="inline" data-state="closed">
+                              <span class="align-middle font-normal text-[14px] leading-[24px] border border-dashed border-transparent box-content break-all px-1 -mx-1 rounded-md textLink autoTruncate">
+                                  <a id="jito-bundle-link" class="text-current" href="${para_link}">${para_text}</a>
+                              </span>
+                          </div>
+                          <span class="inline-flex items-center ml-1 gap-2 align-middle" id="cp-jitobundle">
+                              <div class="inline-flex align-middle" data-state="closed">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy cursor-pointer text-[#adb5bd] hover:text-link-500">
+                                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                                  </svg>
+                              </div>
+                          </span>
+                      </span>
+                  </div>
+              </div>
+          </div>
+      </div>
+  `;
+
+  // 插入新元素
+  const outerDiv = signerDiv.closest("div").parentNode; // 获取最外层的 <div>
+  outerDiv.insertAdjacentElement("afterend", newDiv);
+  return true;
+}
+
+function attemptInsertCustomDiv(para_link, para_text, maxAttempts = 20, attempt = 0) {
+  if (attempt >= maxAttempts) {
+    console.error("Failed to insert custom div after maximum attempts.");
+    return;
+  }
+
+  const success = insertCustomDiv(para_link, para_text);
+  if (success) {
+    console.log("Custom div inserted successfully.");
+    addLoadingIndicator();
+    // read storage and update the div
+    attemptUpdateCustomDiv();    
+  } else {
+    console.log("Attempt failed, retrying in 300ms...");
+    setTimeout(() => {
+      attemptInsertCustomDiv(para_link, para_text, maxAttempts, attempt + 1);
+    }, 300);
+  }
+}
+
+
+function addLoadingIndicator() {
+  let element = document.getElementById("jito-bundle-link");
+  if (!element) return;
+
+  // 设置文本内容
+  element.textContent = "Updating";
+  element.style.display = "inline-flex";
+  element.style.alignItems = "center";
+  element.style.fontWeight = "bold";
+  element.style.fontSize = "14px";
+  
+  // 创建旋转加载动画（单指针样式）
+  let spinner = document.createElement("div");
+  spinner.style.width = "16px";
+  spinner.style.height = "16px";
+  spinner.style.marginLeft = "8px";
+  spinner.style.borderRadius = "50%";
+  spinner.style.border = "2px solid rgba(0, 0, 0, 0.2)";
+  spinner.style.borderTop = "2px solid black";
+  spinner.style.animation = "spin 1s linear infinite";
+  
+  // 添加旋转动画样式
+  let style = document.createElement("style");
+  style.textContent = `
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+  `;
+  document.head.appendChild(style);
+  
+  // 添加旋转图标到元素
+  element.appendChild(spinner);
+}
+
+
+function attemptUpdateCustomDiv(maxAttempts = 30, attempt = 0) {
+  if (attempt >= maxAttempts) {
+    //console.error("Failed to update jito bundle div after maximum attempts.");
+    let element = document.getElementById("jito-bundle-link");
+    if (element) {
+      element.textContent = "Failed to update jito bundle";
+      element.style.color = "red";
+    }    
+    return;
+  }
+
+  if (!global_response) {    
+    setTimeout(() => {
+      attemptUpdateCustomDiv(maxAttempts, attempt + 1);
+    }, 500);
+  } else {
+    isJitoBundle = global_response.isBundle;  
+    let element = document.getElementById("jito-bundle-link");
+    if (isJitoBundle) {    
+      bundleId = global_response.bundleId;      
+      if (element) {
+        element.textContent = bundleId + ' (Validator Tip: ' + global_response.validatorTip + ')';
+        element.href = global_response.bundleUrl;
+      }    
+
+      // 指定要复制到剪贴板的内容
+      const contentToCopy = bundleId;
+
+      // 获取元素
+      const copyElement = document.getElementById('cp-jitobundle');
+
+      if (copyElement) {
+          // 为元素添加点击事件监听器
+          copyElement.addEventListener('click', async () => {
+              try {
+                  // 使用 Clipboard API 将内容写入剪贴板
+                  await navigator.clipboard.writeText(contentToCopy);
+                  console.log('内容已成功复制到剪贴板');
+              } catch (error) {
+                  console.error('复制内容到剪贴板时出错:', error);
+              }
+          });
+      } 
+    } else {
+      if (element) {
+        element.textContent = "Not Jito bundle";
+        element.style.color = "red";
+      }            
+    }
+    global_response = null;    
+  } 
+}
+
+
 // 初始化
 setupPageHandlers();
 
@@ -384,59 +552,7 @@ window.addEventListener('popstate', () => {
   }
 });
 
-
-function insertCustomDiv(para_link, para_text) {
-  // 先找到所有符合基本属性的 div
-  const divs = document.querySelectorAll("div");
-
-  const signerDiv = Array.from(divs).find(div => div.innerText.trim() === "Signer");
-  if (!signerDiv) {
-    console.warn("未找到包含 'Signer' 的 div");
-    return;
+  // 检查当前页面
+  if (isTransactionPage()) {
+    attemptInsertCustomDiv("#", "Bundle ID (Tip)");
   }
-
-  // 创建新的 div 元素
-  const newDiv = document.createElement("div");
-  newDiv.innerHTML = `
-      <div class="flex flex-row flex-wrap justify-start grow-0 shrink-0 basis-full min-w-0 box-border -mx-4 sm:-mx-3 items-stretch gap-y-0">
-          <div class="max-w-24/24 md:max-w-6/24 flex-24/24 md:flex-6/24 block relative box-border my-0 px-4 sm:px-3">
-              <div class="flex gap-1 flex-row items-center justify-start flex-wrap">
-                  <div class="" data-state="closed">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-help text-neutral8 md:text-neutral5 font-medium md:font-normal">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                          <path d="M12 17h.01"></path>
-                      </svg>
-                  </div>
-                  <div class="not-italic text-[14px] leading-[24px] text-neutral8 md:text-neutral5 font-medium md:font-normal">Jito Bundle</div>
-              </div>
-          </div>
-          <div class="max-w-24/24 md:max-w-18/24 flex-24/24 md:flex-18/24 block relative box-border my-0 px-4 sm:px-3">
-              <div class="flex flex-col gap-2 items-stretch justify-start w-full">
-                  <div>
-                      <span class="w-auto max-w-full whitespace-nowrap">
-                          <div class="inline" data-state="closed">
-                              <span class="align-middle font-normal text-[14px] leading-[24px] border border-dashed border-transparent box-content break-all px-1 -mx-1 rounded-md textLink autoTruncate">
-                                  <a class="text-current" href="${para_link}">${para_text}</a>
-                              </span>
-                          </div>
-                          <span class="inline-flex items-center ml-1 gap-2 align-middle">
-                              <div class="inline-flex align-middle" data-state="closed">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy cursor-pointer text-[#adb5bd] hover:text-link-500">
-                                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
-                                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
-                                  </svg>
-                              </div>
-                          </span>
-                      </span>
-                  </div>
-              </div>
-          </div>
-      </div>
-  `;
-
-  // 插入新元素
-  const outerDiv = signerDiv.closest("div").parentNode; // 获取最外层的 <div>
-  outerDiv.insertAdjacentElement("afterend", newDiv);
-  
-}
