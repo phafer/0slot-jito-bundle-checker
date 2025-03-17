@@ -410,7 +410,7 @@ function insertCustomDiv(para_link, para_text) {
   `;
 
   // 插入新元素
-  const outerDiv = signerDiv.closest("div").parentNode; // 获取最外层的 <div>
+  const outerDiv = signerDiv.closest("div").parentNode.closest("div").parentNode.closest("div").parentNode; // 获取最外层的 <div>  
   outerDiv.insertAdjacentElement("afterend", newDiv);
   return true;
 }
