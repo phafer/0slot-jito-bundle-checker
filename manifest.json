@@ -12,7 +12,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://solscan.io/tx/*",                  
+      "matches": ["https://solscan.io/*",                  
                   "https://bundles.jito.wtf/*"],
       "js": ["content.js"],
       "run_at": "document_end"
