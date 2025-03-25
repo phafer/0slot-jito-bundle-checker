@@ -3,7 +3,7 @@
   "name": "Solscan Jito Bundle Detector",
   "version": "2.3",
   "description": "Detects if a transaction on Solscan is a Jito bundle",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["scripting"],
   "host_permissions": [
     "https://explorer.jito.wtf/*"
   ],  

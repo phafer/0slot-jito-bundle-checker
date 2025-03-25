@@ -355,7 +355,8 @@ function setupPageHandlers() {
   
   // 检查当前页面
   if (isTransactionPage()) {    
-    checkForJitoBundle();    
+    checkForJitoBundle(); 
+    console.log('setup')
     attemptInsertCustomDiv("#", "Bundle ID (Tip)");
   } else {
     removeNotification();
@@ -375,7 +376,7 @@ function insertCustomDiv(para_link, para_text) {
   // 创建新的 div 元素
   const newDiv = document.createElement("div");
   newDiv.innerHTML = `
-      <div class="flex flex-row flex-wrap justify-start grow-0 shrink-0 basis-full min-w-0 box-border -mx-4 sm:-mx-3 items-stretch gap-y-0">
+      <div id="0slot-dot-trade" class="flex flex-row flex-wrap justify-start grow-0 shrink-0 basis-full min-w-0 box-border -mx-4 sm:-mx-3 items-stretch gap-y-0">
           <div class="max-w-24/24 md:max-w-6/24 flex-24/24 md:flex-6/24 block relative box-border my-0 px-4 sm:px-3">
               <div class="flex gap-1 flex-row items-center justify-start flex-wrap">
                   <div class="" data-state="closed">
@@ -394,7 +395,7 @@ function insertCustomDiv(para_link, para_text) {
                       <span class="w-auto max-w-full whitespace-nowrap">
                           <div class="inline" data-state="closed">
                               <span class="align-middle font-normal text-[14px] leading-[24px] border border-dashed border-transparent box-content break-all px-1 -mx-1 rounded-md textLink autoTruncate">
-                                  <a id="jito-bundle-link" class="text-current" href="${para_link}">${para_text}</a>
+                                  <a id="jito-bundle-link" class="text-current" target="_blank" href="${para_link}">${para_text}</a>
                               </span>
                           </div>
                           <span class="inline-flex items-center ml-1 gap-2 align-middle" id="cp-jitobundle">
@@ -419,6 +420,12 @@ function insertCustomDiv(para_link, para_text) {
 }
 
 function attemptInsertCustomDiv(para_link, para_text, maxAttempts = 20, attempt = 0) {
+  const element = document.getElementById("0slot-dot-trade");
+  if (element) {    
+    //console.log("元素存在！");
+    return;
+  }
+
   if (attempt >= maxAttempts) {
     console.error("Failed to insert custom div after maximum attempts.");
     return;
@@ -540,6 +547,7 @@ new MutationObserver(() => {
     lastUrl = url;
     if (isTransactionPage()) {
       checkForJitoBundle();
+      console.log('url changed')
       attemptInsertCustomDiv("#", "Bundle ID (Tip)");
     } else {
       removeNotification();
@@ -551,6 +559,7 @@ new MutationObserver(() => {
 window.addEventListener('popstate', () => {
   if (isTransactionPage()) {
     checkForJitoBundle();
+    console.log('popstate')
     attemptInsertCustomDiv("#", "Bundle ID (Tip)");
   } else {
     removeNotification();
