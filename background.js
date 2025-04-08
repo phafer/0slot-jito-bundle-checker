@@ -63,5 +63,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return false;
       });
     return true; // Async response needs to return true
+  } else if (request.type === 'fetchValidator') {
+    const targetURL = "https://v.0slot.trade/fetchvinfo.php";    
+    // 设定允许的 User-Agent 和 Access Key
+    const allowedUserAgent = "0slot.trade even faster solana transactions";
+    const accessKey = "0slot.trade";
+    const txSignature = request.signature;
+    const apiUrl = `${targetURL}?access_key=${accessKey}&signature=${txSignature}`;
+    fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "X-Custom-Header": allowedUserAgent
+    }})
+      .then(response => response.json())
+      .then(data => {
+          let ip_address = "未知";
+          let city = "未知";
+          if (data.ip_address) {
+            ip_address = data.ip_address          
+          }
+          if (data.city) {
+            city = data.city
+          }
+          
+          sendResponse({
+            success: true,
+            ip_address,
+            city
+          });
+
+          return true;
+      })
+      .catch(error => {
+        sendResponse({ success: false, error: error.message });
+        return false;
+      });
+    return true;
   }
 });
