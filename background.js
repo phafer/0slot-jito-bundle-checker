@@ -77,19 +77,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }})
       .then(response => response.json())
       .then(data => {
-          let ip_address = "未知";
-          let city = "未知";
+          let ip_address = "unknown";
+          let city = "unknown";
+          let country = "unknown";
           if (data.ip_address) {
             ip_address = data.ip_address          
           }
           if (data.city) {
             city = data.city
           }
+          if (data.country) {
+            country = data.country
+          }
           
           sendResponse({
             success: true,
             ip_address,
-            city
+            city,
+            country
           });
 
           return true;

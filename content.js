@@ -5,6 +5,7 @@ let txStartsWith = 'https://solscan.io/tx/';
 let global_response = null;
 let ip_address = null;
 let city = null;
+let country = null;
 
 // 正则表达式用于匹配Solana交易签名
 const solanaSignatureRegex = /[1-9A-HJ-NP-Za-km-z]{32,88}/;
@@ -63,10 +64,12 @@ function checkForJitoBundle() {
         console.log(`IP = ${response.ip_address}`);
         ip_address = response.ip_address;
         city = response.city;
+        country = response.country;
       } else {
         // Handle error
-        ip_address = "未知";
-        city = "未知";
+        ip_address = "unknown";
+        city = "unknown";
+        country = "unknown";
       }
     }
   );
@@ -592,7 +595,7 @@ function attemptUpdateValidatorInfo(maxAttempts = 30, attempt = 0) {
     //console.error("Failed to update jito bundle div after maximum attempts.");
     let element = document.getElementById("validator-ip");
     if (element) {
-      element.textContent = "未知";
+      element.textContent = "unknown";
       element.style.color = "red";
     }    
     return;
@@ -605,12 +608,13 @@ function attemptUpdateValidatorInfo(maxAttempts = 30, attempt = 0) {
   } else {    
     let element = document.getElementById("validator-ip");
     if (element) {
-      element.textContent = `${ip_address} | ${city}`;
+      element.textContent = `${ip_address} | ${city}, ${country}`;
       element.href = `https://ipinfo.io/${ip_address}`;
     }    
 
     ip_address = null;
     city = null;
+    country = null;
   } 
 }
 
