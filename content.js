@@ -447,7 +447,7 @@ function insertCustomDiv(para_link, para_text) {
                           <path d="M12 17h.01"></path>
                       </svg>
                   </div>
-                  <div class="not-italic text-[14px] leading-[24px] text-neutral8 md:text-neutral5 font-medium md:font-normal">Validator Info</div>
+                  <div class="not-italic text-[14px] leading-[24px] text-neutral8 md:text-neutral5 font-medium md:font-normal">Leader Info</div>
               </div>
           </div>
           <div class="max-w-24/24 md:max-w-18/24 flex-24/24 md:flex-18/24 block relative box-border my-0 px-4 sm:px-3">
